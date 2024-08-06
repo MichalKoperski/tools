@@ -17,14 +17,14 @@ if len(moneyInput) == 0:
     moneyInput = savings
 moneyInput = int(moneyInput)
 
-howManyColumns = input("How many columns: ")
+howManyColumns = input("How many months: ")
 if len(howManyColumns) == 0:
     howManyColumns = 6
 howManyColumns = int(howManyColumns)
 
 printVariable = input("Print prices? ")
 if printVariable == "y" or printVariable == "yes":
-    file = open(r"zzz.txt", "r")
+    file = open(r"costs.txt", "r")
     rprint(file.read())
     file.close()
 
