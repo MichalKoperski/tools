@@ -115,5 +115,5 @@ for row in range(3):
     for column in range(3):
         buttons[row][column] = Button(frame, text="",font=('arial',40), width=5, height=2, command=lambda row=row, column=column: next_turn(row,column))
         buttons[row][column].grid(row=row,column=column)
-
+#aa
 window.mainloop()
