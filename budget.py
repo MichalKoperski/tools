@@ -1,7 +1,7 @@
 from rich.console import Console
 from rich.table import Table
 from rich import print as rprint
-import calendar
+import table
 from datetime import date
 
 
