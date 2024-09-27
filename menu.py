@@ -181,7 +181,7 @@ while True:
                          "events, person where events.id_person=person.id_person order by events.date")
                 print(tabulate(read_query(connection, query), headers=['name', 'surname', 'date', 'description'], tablefmt='psql'))
                 print()
-            elif choice == 8:
+            else:
                 loop_db = False
                 break
     elif choice == 2:
