@@ -133,13 +133,18 @@ while True:
             if choice == 1:
                 person = input("Person: ")
                 query = "select id_person from person where surname = '%s'" %person
-                id = int(read_query(connection, query)[0][0])
-                query = "select * from person where surname = '%s'" %person
-                print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'], tablefmt='psql'))
-                query = ("select events.date, events.description from person, events where "
+                if read_query(connection, query) is True:
+                    id = int(read_query(connection, query)[0][0])
+                    print(id)
+                    print(type(id))
+                    query = "select * from person where surname = '%s'" %person
+                    print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'], tablefmt='psql'))
+                    query = ("select events.date, events.description from person, events where "
                          "events.id_person=person.id_person and person.id_person = %s order by events.date") %id
-                print(tabulate(read_query(connection, query), headers=['date','description'], tablefmt='psql'))
-                print()
+                    print(tabulate(read_query(connection, query), headers=['date','description'], tablefmt='psql'))
+                    print()
+                else:
+                    print("No such person in database")
             elif choice == 2:
                 name = input("Name: ")
                 surname = input("Surname: ")
