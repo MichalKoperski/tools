@@ -3,7 +3,9 @@ import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 from getpass import getpass
+from tabulate import tabulate
 
+#======================================SQL=========================================
 def create_db_connection(host_name, user_name, user_password, db_name):
     connection = None
     try:
@@ -19,10 +21,10 @@ def create_db_connection(host_name, user_name, user_password, db_name):
 
     return connection
 
-def execute_query(connection, query):
+def execute_query(connection, query, val):
     cursor = connection.cursor()
     try:
-        cursor.execute(query)
+        cursor.execute(query, val)
         connection.commit()
         print("Query successful")
     except Error as err:
@@ -38,6 +40,7 @@ def read_query(connection, query):
     except Error as err:
         print(f"Error: '{err}'")
 
+#====================================================BUDGET==============================================
 def run_budget():
     months = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July", 8: "August",
               9: "September", 10: "October", 11: "November", 12: "December"}
@@ -99,24 +102,85 @@ def run_budget():
         y = 4 + max_length - str(value).__len__()
         print(" " * y + str("{:,}".format(value)), end=" |")
 
-while True:
-    print("="*100)
-    print("1.run database\n2.run budget")
+def menu_display():
+    print()
+    print("=" * 40)
+    print("||   1.run database    2.run budget   ||")
+    print("=" * 40)
+    print()
     choice = int(input("What do you want to do?: "))
+    return choice
+
+def menu_display_db():
+    print()
+    print("==================PERSON================\n"
+          "||  1.select    2.insert    3.delete  ||\n"
+          "================DESCRIPTION=============\n"
+          "||     4.insert           5.delete    ||\n"
+          "==================ALL===================\n"
+          "||  6.people     7.events    8.exit   ||\n"
+          "========================================\n")
+    choice = int(input("What do you want to do?: "))
+    return choice
+
+while True:
+    loop_db = True
+    choice = menu_display()
     if choice == 1:
-        user_password = getpass()
-        connection = create_db_connection('localhost','root',user_password,'person_database')
-        print("1.select a person\n2.insert a person\n3.insert a description\n4.show all people")
-        choice = int(input("What do you want to do?: "))
-        if choice == 1:
-            person = input("Person: ")
-            query = "select * from person where surname = '%s'" %person
-            print(read_query(connection, query))
-
-        elif choice == 4:
-            query = "select name, surname from person"
-            print(read_query(connection, query))
-
+        connection = create_db_connection('localhost', 'root', getpass(), 'person_database')
+        while loop_db:
+            choice = menu_display_db()
+            if choice == 1:
+                person = input("Person: ")
+                query = "select id_person from person where surname = '%s'" %person
+                id = int(read_query(connection, query)[0][0])
+                query = "select * from person where surname = '%s'" %person
+                print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'], tablefmt='psql'))
+                query = ("select events.date, events.description from person, events where events.id_person=person.id_person and person.id_person = %s order by events.date") %id
+                print(tabulate(read_query(connection, query), headers=['date','description'], tablefmt='psql'))
+                print()
+            elif choice == 2:
+                name = input("Name: ")
+                surname = input("Surname: ")
+                start = input("Date: ")
+                position = input("Position: ")
+                query = "insert into person(start, name, surname, position) values (%s, %s, %s, %s);"
+                val = (start, name, surname, position)
+                execute_query(connection, query, val)
+            elif choice == 3:
+                person = input("Surname: ")
+                query = "delete from person where surname = '%s'" %person
+                val = ()
+                execute_query(connection, query, val)
+            elif choice == 4:
+                person = input("Surname: ")
+                date = input("Date: ")
+                description = input("Description: ")
+                query = "select id_person from person where surname = '%s'" %person
+                id = int(read_query(connection, query)[0][0])
+                query = "insert into events(id_person, date, description) values (%s, %s, %s);"
+                val = (id, date, description)
+                execute_query(connection, query, val)
+            elif choice == 5:
+                person = input("Surname: ")
+                query = "select id_person from person where surname = '%s'" %person
+                id = int(read_query(connection, query)[0][0])
+                query = "delete from events where id_person = '%s'" %id
+                val = ()
+                execute_query(connection, query, val)
+            elif choice == 6:
+                query = "select * from person"
+                print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'], tablefmt='psql'))
+                print()
+            elif choice == 7:
+                query = ("select person.name, person.surname, events.date, events.description from "
+                         "events, person where events.id_person=person.id_person order by events.date")
+                print(tabulate(read_query(connection, query), headers=['name', 'surname', 'date', 'description'], tablefmt='psql'))
+                print()
+            elif choice == 8:
+                loop_db = False
+                break
     elif choice == 2:
+        print()
         run_budget()
-        break
+        print()
