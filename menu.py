@@ -136,7 +136,8 @@ while True:
                 id = int(read_query(connection, query)[0][0])
                 query = "select * from person where surname = '%s'" %person
                 print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'], tablefmt='psql'))
-                query = ("select events.date, events.description from person, events where events.id_person=person.id_person and person.id_person = %s order by events.date") %id
+                query = ("select events.date, events.description from person, events where "
+                         "events.id_person=person.id_person and person.id_person = %s order by events.date") %id
                 print(tabulate(read_query(connection, query), headers=['date','description'], tablefmt='psql'))
                 print()
             elif choice == 2:
