@@ -133,10 +133,8 @@ while True:
             if choice == 1:
                 person = input("Person: ")
                 query = "select id_person from person where surname = '%s'" %person
-                if read_query(connection, query) is True:
+                if len(read_query(connection, query)) != 0:
                     id = int(read_query(connection, query)[0][0])
-                    print(id)
-                    print(type(id))
                     query = "select * from person where surname = '%s'" %person
                     print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'], tablefmt='psql'))
                     query = ("select events.date, events.description from person, events where "
