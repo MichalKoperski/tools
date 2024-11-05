@@ -1,44 +1,6 @@
 import datetime
-import mysql.connector
-from mysql.connector import Error
 import pandas as pd
-from getpass import getpass
 from tabulate import tabulate
-
-#======================================SQL=========================================
-def create_db_connection(host_name, user_name, user_password, db_name):
-    connection = None
-    try:
-        connection = mysql.connector.connect(
-            host=host_name,
-            user=user_name,
-            passwd=user_password,
-            database=db_name
-        )
-        print("MySQL Database connection successful")
-    except Error as err:
-        print(f"Error: '{err}'")
-
-    return connection
-
-def execute_query(connection, query, val):
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query, val)
-        connection.commit()
-        print("Query successful")
-    except Error as err:
-        print(f"Error: '{err}'")
-
-def read_query(connection, query):
-    cursor = connection.cursor()
-    result = None
-    try:
-        cursor.execute(query)
-        result = cursor.fetchall()
-        return result
-    except Error as err:
-        print(f"Error: '{err}'")
 
 #====================================================BUDGET==============================================
 def run_budget():
@@ -50,7 +12,7 @@ def run_budget():
     cash_outflow = 0
 
     var = {}
-    with open("costs.txt") as conf:
+    with open("/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/costs.txt") as conf:
         for line in conf:
             if "=" in line:
                 name, value = line.split(" = ")
@@ -123,16 +85,16 @@ def menu_display_db():
     choice = int(input("What do you want to do?: "))
     return choice
 
+
 while True:
     loop_db = True
     choice = menu_display()
     if choice == 1:
-        connection = create_db_connection('localhost', 'root', getpass(), 'person_database')
+        df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv')
         while loop_db:
             choice = menu_display_db()
             if choice == 1:
                 person = input("Person: ")
-                query = "select id_person from person where surname = '%s'" %person
                 if len(read_query(connection, query)) != 0:
                     id = int(read_query(connection, query)[0][0])
                     query = "select * from person where surname = '%s'" %person
