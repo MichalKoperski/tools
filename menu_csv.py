@@ -1,5 +1,5 @@
 import datetime
-import pandas as pd
+import plotext as plt
 
 #====================================================BUDGET==============================================
 def run_budget():
@@ -62,6 +62,16 @@ def run_budget():
     for key, value in month_costs.items():
         y = 4 + max_length - str(value).__len__()
         print(" " * y + str("{:,}".format(value)), end=" |")
+
+# ====================================================GRAPH==============================================
+    a = {}
+    for key, value in month_costs.items():
+        s = (int(value / 1000))
+        a.update({key:s})
+    plt.simple_bar(a.keys(), a.values(), width=100, title='Savings in TPLN', color='green')
+    print()
+    print()
+    plt.show()
 
 def menu_display():
     print()
