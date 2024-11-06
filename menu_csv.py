@@ -88,7 +88,7 @@ while loop_menu:
     loop_db = True
     choice = menu_display()
     if choice == 1:
-        df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv')
+        df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv', index_col='id')
         while loop_db:
             choice = menu_display_db()
             if choice == 1:
@@ -108,18 +108,17 @@ while loop_menu:
                 date = input("Date: ")
                 description = input("Description: ")
                 id = len(df) + 1
-                df.loc[id, ['start', 'name', 'surname', 'position', 'date', 'description']] = [start, name, surname, position, date, description]
-                #df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv')
+                df.loc[id, ['id', 'start', 'name', 'surname', 'position', 'date', 'description']] = [id, start, name, surname, position, date, description]
             elif choice == 3:
                 person = input("Surname: ")
                 filt = (df['surname'] == person)
                 df.drop(index=df[filt].index, inplace=True)
-                #df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv')
             elif choice == 4:
                 filt = (df['surname'].drop_duplicates().index)
                 print(df.loc[filt, ['name', 'surname', 'start', 'position']])
                 print()
             else:
+                df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
                 df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv')
                 loop_db = False
                 break
