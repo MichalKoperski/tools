@@ -2,8 +2,46 @@ import datetime
 import pandas as pd
 import plotext as plt
 import calendar
+import requests
+
+#====================================================CURRENCY==============================================
+
+
+def currency_converter():
+    api_key = 0
+    with open("/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/open_currency.txt") as conf:
+        for line in conf:
+            api_key = line
+
+    url = f"https://openexchangerates.org/api/latest.json?app_id={api_key}"
+
+    response = requests.get(url)
+    data = response.json()
+
+    exchange_rates = data["rates"]
+
+    available_currencies = ""
+    for currency in exchange_rates.keys():
+        available_currencies += currency + ", "
+
+    available_currencies = available_currencies[:-2]
+
+    print("Available currencies: " + available_currencies)
+
+    from_currency = input("Enter the base currency: ").upper()
+    to_currency = input("Enter the target currency: ").upper()
+
+    amount = float(input("Enter the amount to convert: "))
+
+    original_amount = amount / exchange_rates[from_currency]
+    converted_amount = original_amount * exchange_rates[to_currency]
+
+    print(f"{amount} {from_currency} = {converted_amount} {to_currency}")
+
 
 #====================================================BUDGET==============================================
+
+
 def run_budget():
     months = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July", 8: "August",
               9: "September", 10: "October", 11: "November", 12: "December"}
@@ -13,7 +51,7 @@ def run_budget():
     cash_outflow = 0
 
     var = {}
-    with open("/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/costs.txt") as conf:
+    with open("/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/costs.txt") as conf:
         for line in conf:
             if "=" in line:
                 name, value = line.split(" = ")
@@ -77,9 +115,9 @@ def run_budget():
 
 def menu_display():
     print()
-    print("=" * 54)
-    print("|| 1.run database  2.run budget  3.calendar  4.exit ||")
-    print("=" * 54)
+    print("=" * 76)
+    print("|| 1.run database  2.run budget  3.calendar  4.currency converter  5.exit ||")
+    print("=" * 76)
     print()
     choice = int(input("What do you want to do?: "))
     return choice
@@ -100,7 +138,7 @@ while loop_menu:
     loop_db = True
     choice = menu_display()
     if choice == 1:
-        df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv', index_col='id')
+        df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv', index_col='id')
         while loop_db:
             choice = menu_display_db()
             if choice == 1:
@@ -131,7 +169,7 @@ while loop_menu:
                 print()
             else:
                 df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
-                df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/db.csv')
+                df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv')
                 loop_db = False
                 break
     elif choice == 2:
@@ -145,5 +183,9 @@ while loop_menu:
             print(calendar.month(datetime.date.today().year, datetime.date.today().month))
         else:
             print(calendar.calendar(datetime.date.today().year))
+    elif choice == 4:
+        print()
+        currency_converter()
+        print()
     else:
         loop_menu = False
