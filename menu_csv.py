@@ -1,6 +1,7 @@
 import datetime
 import pandas as pd
 import plotext as plt
+import calendar
 
 #====================================================BUDGET==============================================
 def run_budget():
@@ -76,9 +77,9 @@ def run_budget():
 
 def menu_display():
     print()
-    print("=" * 42)
-    print("|| 1.run database  2.run budget  3.exit ||")
-    print("=" * 42)
+    print("=" * 54)
+    print("|| 1.run database  2.run budget  3.calendar  4.exit ||")
+    print("=" * 54)
     print()
     choice = int(input("What do you want to do?: "))
     return choice
@@ -137,5 +138,12 @@ while loop_menu:
         print()
         run_budget()
         print()
+    elif choice == 3:
+        choice = input("month [m] or year [y]: ")
+        print()
+        if choice == 'm':
+            print(calendar.month(datetime.date.today().year, datetime.date.today().month))
+        else:
+            print(calendar.calendar(datetime.date.today().year))
     else:
         loop_menu = False
