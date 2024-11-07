@@ -1,21 +1,12 @@
-from scapy.all import ARP, Ether, srp
+import requests
 
+# get your free api key from : https://www.alphavantage.co/support/#api-key
+API_KEY = "YOUR_API_KEY"
+def get_current_price(SYMBOL):
+  url = "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency="+SYMBOL+"&to_currency=USD&apikey=" + API_KEY
+  response = requests.get(url)
+  data = response.json()
+  return float(data["Realtime Currency Exchange Rate"]["5. Exchange Rate"])
 
-def scan(ip):
-    arp_request = ARP(pdst=ip)
-    ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-    packet = ether / arp_request
-    result = srp(packet, timeout=3, verbose=0)[0]
-
-    devices = []
-    for sent, received in result:
-        devices.append({'ip': received.psrc, 'mac': received.hwsrc})
-
-    return devices
-
-
-ip_range = "192.168.50.0/24"
-devices = scan(ip_range)
-
-for device in devices:
-    print(f"IP: {device['ip']}, MAC: {device['mac']}")
+symbol = "BTC"
+print("The current price of",symbol,"is",get_current_price("BTC"))

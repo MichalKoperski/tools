@@ -160,6 +160,15 @@ def currency_converter():
     print(f"{amount} {from_currency} = {converted_amount} {to_currency}")
 
 
+#====================================================CRYPTO==============================================
+def get_crypto_prices():
+    url = 'https://api.coingecko.com/api/v3/simple/price'
+    params = {'ids': 'bitcoin,ethereum,litecoin', 'vs_currencies': 'pln'}
+    response = requests.get(url, params=params)
+    prices = response.json()
+    return prices
+
+
 #====================================================BUDGET==============================================
 
 
@@ -377,9 +386,9 @@ def sql_db():
 def menu_display():
     show_time()
     print()
-    print("=" * 87)
-    print("|| 1.run database  2.run budget  3.calendar  4.currency converter  5.network  6.exit ||")
-    print("=" * 87)
+    print("=" * 77)
+    print("|| 1.run database  2.run budget  3.calendar  4.currency  5.network  6.exit ||")
+    print("=" * 77)
     print()
     choice = int(input("What do you want to do?: "))
     return choice
@@ -432,9 +441,15 @@ def terminal():
             else:
                 print(calendar.calendar(datetime.date.today().year))
         elif choice == 4:
+            choice = input("crypto [c] or real [r]: ")
             print()
-            currency_converter()
-            print()
+            if choice == 'c':
+                get_crypto_prices()
+                crypto_prices = get_crypto_prices()
+                for coin, value in crypto_prices.items():
+                    print(f"{coin.capitalize()}: {str("{:,}".format(int(value['pln'])))} PLN")
+            else:
+                currency_converter()
         elif choice == 5:
             choice = input("Scan network [1] or Attack an IP [2]: ")
             if choice == '1':
