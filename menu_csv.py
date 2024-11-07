@@ -3,6 +3,10 @@ import pandas as pd
 import plotext as plt
 import calendar
 import requests
+import mysql.connector
+from mysql.connector import Error
+from getpass import getpass
+from tabulate import tabulate
 
 
 #====================================================CLOCK==============================================
@@ -126,6 +130,145 @@ def run_budget():
     plt.show()
 
 
+# ====================================================CSV==============================================
+def csv_db():
+    df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv', index_col='id')
+    while True:
+        choice = menu_display_csv()
+        if choice == 1:
+            person = input("Person: ")
+            filt = (df['surname'] == person)
+            if (len(df[filt]) != 0):
+                filt2 = df.loc[filt, 'surname'].drop_duplicates().index
+                print(tabulate(df.loc[filt2, ['name', 'surname', 'start', 'position']], headers=['id', 'name', 'surname', 'start', 'position'], tablefmt='psql'))
+                print(tabulate(df.loc[filt, ['date', 'description']], headers=['date', 'description'], tablefmt='psql'))
+            else:
+                print("No such person")
+        elif choice == 2:
+            name = input("Name: ")
+            surname = input("Surname: ")
+            start = input("Date: ")
+            position = input("Position: ")
+            date = input("Date: ")
+            description = input("Description: ")
+            id = len(df) + 1
+            df.loc[id, ['id', 'start', 'name', 'surname', 'position', 'date', 'description']] = [id, start, name,
+                                                                                                 surname, position,
+                                                                                                 date, description]
+        elif choice == 3:
+            person = input("Surname: ")
+            filt = (df['surname'] == person)
+            df.drop(index=df[filt].index, inplace=True)
+        elif choice == 4:
+            filt = (df['surname'].drop_duplicates().index)
+            print(tabulate(df.loc[filt, ['name', 'surname', 'start', 'position']], headers=['id', 'name', 'surname', 'start', 'position'], tablefmt='psql'))
+            print()
+        else:
+            df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
+            df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv')
+            break
+
+
+#==============================================SQL================================================
+def create_db_connection(host_name, user_name, user_password, db_name):
+    connection = None
+    try:
+        connection = mysql.connector.connect(
+            host=host_name,
+            user=user_name,
+            passwd=user_password,
+            database=db_name
+        )
+        print("MySQL Database connection successful")
+    except Error as err:
+        print(f"Error: '{err}'")
+
+    return connection
+
+
+def execute_query(connection, query, val):
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query, val)
+        connection.commit()
+        print("Query successful")
+    except Error as err:
+        print(f"Error: '{err}'")
+
+
+def read_query(connection, query):
+    cursor = connection.cursor()
+    result = None
+    try:
+        cursor.execute(query)
+        result = cursor.fetchall()
+        return result
+    except Error as err:
+        print(f"Error: '{err}'")
+
+
+def sql_db():
+    connection = create_db_connection('localhost', 'root', getpass(), 'person_database')
+    while True:
+        choice = menu_display_sql()
+        if choice == 1:
+            person = input("Person: ")
+            query = "select id_person from person where surname = '%s'" % person
+            if len(read_query(connection, query)) != 0:
+                id = int(read_query(connection, query)[0][0])
+                query = "select * from person where surname = '%s'" % person
+                print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'],
+                               tablefmt='psql'))
+                query = ("select events.date, events.description from person, events where "
+                         "events.id_person=person.id_person and person.id_person = %s order by events.date") % id
+                print(tabulate(read_query(connection, query), headers=['date', 'description'], tablefmt='psql'))
+                print()
+            else:
+                print("No such person in database")
+        elif choice == 2:
+            name = input("Name: ")
+            surname = input("Surname: ")
+            start = input("Date: ")
+            position = input("Position: ")
+            query = "insert into person(start, name, surname, position) values (%s, %s, %s, %s);"
+            val = (start, name, surname, position)
+            execute_query(connection, query, val)
+        elif choice == 3:
+            person = input("Surname: ")
+            query = "delete from person where surname = '%s'" % person
+            val = ()
+            execute_query(connection, query, val)
+        elif choice == 4:
+            person = input("Surname: ")
+            date = input("Date: ")
+            description = input("Description: ")
+            query = "select id_person from person where surname = '%s'" % person
+            id = int(read_query(connection, query)[0][0])
+            query = "insert into events(id_person, date, description) values (%s, %s, %s);"
+            val = (id, date, description)
+            execute_query(connection, query, val)
+        elif choice == 5:
+            person = input("Surname: ")
+            query = "select id_person from person where surname = '%s'" % person
+            id = int(read_query(connection, query)[0][0])
+            query = "delete from events where id_person = '%s'" % id
+            val = ()
+            execute_query(connection, query, val)
+        elif choice == 6:
+            query = "select * from person"
+            print(tabulate(read_query(connection, query), headers=['id', 'date', 'name', 'surname', 'position'],
+                           tablefmt='psql'))
+            print()
+        elif choice == 7:
+            query = ("select person.name, person.surname, events.date, events.description from "
+                     "events, person where events.id_person=person.id_person order by events.date")
+            print(tabulate(read_query(connection, query), headers=['name', 'surname', 'date', 'description'],
+                           tablefmt='psql'))
+            print()
+        else:
+            break
+
+
 def menu_display():
     show_time()
     print()
@@ -137,7 +280,7 @@ def menu_display():
     return choice
 
 
-def menu_display_db():
+def menu_display_csv():
     show_time()
     print()
     print("==================PERSON================\n"
@@ -149,44 +292,29 @@ def menu_display_db():
     return choice
 
 
+def menu_display_sql():
+    print()
+    print("==================PERSON================\n"
+          "||  1.select    2.insert    3.delete  ||\n"
+          "================DESCRIPTION=============\n"
+          "||     4.insert           5.delete    ||\n"
+          "==================ALL===================\n"
+          "||  6.people     7.events    8.exit   ||\n"
+          "========================================\n")
+    choice = int(input("What do you want to do?: "))
+    return choice
+
+
 def terminal():
     loop_menu = True
     while loop_menu:
         choice = menu_display()
         if choice == 1:
-            df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv', index_col='id')
-            while True:
-                choice = menu_display_db()
-                if choice == 1:
-                    person = input("Person: ")
-                    filt = (df['surname'] == person)
-                    if (len(df[filt]) != 0):
-                        filt2 = df.loc[filt, 'surname'].drop_duplicates().index
-                        print(df.loc[filt2, ['name', 'surname', 'start', 'position']])
-                        print(df.loc[filt, ['date', 'description']])
-                    else:
-                        print("No such person")
-                elif choice == 2:
-                    name = input("Name: ")
-                    surname = input("Surname: ")
-                    start = input("Date: ")
-                    position = input("Position: ")
-                    date = input("Date: ")
-                    description = input("Description: ")
-                    id = len(df) + 1
-                    df.loc[id, ['id', 'start', 'name', 'surname', 'position', 'date', 'description']] = [id, start, name, surname, position, date, description]
-                elif choice == 3:
-                    person = input("Surname: ")
-                    filt = (df['surname'] == person)
-                    df.drop(index=df[filt].index, inplace=True)
-                elif choice == 4:
-                    filt = (df['surname'].drop_duplicates().index)
-                    print(df.loc[filt, ['name', 'surname', 'start', 'position']])
-                    print()
-                else:
-                    df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
-                    df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv')
-                    break
+            choice = input("sql [s] or csv [c]: ")
+            if choice == 's':
+                sql_db()
+            else:
+                csv_db()
         elif choice == 2:
             print()
             run_budget()
