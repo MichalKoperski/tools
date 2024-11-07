@@ -420,8 +420,7 @@ def menu_display_sql():
 
 
 def terminal():
-    loop_menu = True
-    while loop_menu:
+    while True:
         choice = menu_display()
         if choice == 1:
             choice = input("sql [s] or csv [c]: ")
@@ -457,7 +456,7 @@ def terminal():
             else:
                 network_attacker()
         else:
-            loop_menu = False
+            break
 
 
 terminal()
