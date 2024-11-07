@@ -3,6 +3,23 @@ import pandas as pd
 import plotext as plt
 import calendar
 import requests
+import time
+from multiprocessing import Process
+import threading
+import concurrent.futures
+
+
+#====================================================CLOCK==============================================
+
+
+def show_time():
+    while True:
+        now = datetime.datetime.now()
+        current_time = now.strftime("%-H:%M")
+        current_second = now.strftime("%S")
+        print(f"\033cClock: {current_time}:{current_second}")
+        time.sleep(1)
+
 
 #====================================================CURRENCY==============================================
 
@@ -113,6 +130,7 @@ def run_budget():
     print()
     plt.show()
 
+
 def menu_display():
     print()
     print("=" * 76)
@@ -121,6 +139,7 @@ def menu_display():
     print()
     choice = int(input("What do you want to do?: "))
     return choice
+
 
 def menu_display_db():
     print()
@@ -133,59 +152,68 @@ def menu_display_db():
     return choice
 
 
-loop_menu = True
-while loop_menu:
-    loop_db = True
-    choice = menu_display()
-    if choice == 1:
-        df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv', index_col='id')
-        while loop_db:
-            choice = menu_display_db()
-            if choice == 1:
-                person = input("Person: ")
-                filt = (df['surname'] == person)
-                if (len(df[filt]) != 0):
-                    filt2 = df.loc[filt, 'surname'].drop_duplicates().index
-                    print(df.loc[filt2, ['name', 'surname', 'start', 'position']])
-                    print(df.loc[filt, ['date', 'description']])
+def terminal():
+    loop_menu = True
+    while loop_menu:
+        loop_db = True
+        choice = menu_display()
+        if choice == 1:
+            df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv', index_col='id')
+            while loop_db:
+                choice = menu_display_db()
+                if choice == 1:
+                    person = input("Person: ")
+                    filt = (df['surname'] == person)
+                    if (len(df[filt]) != 0):
+                        filt2 = df.loc[filt, 'surname'].drop_duplicates().index
+                        print(df.loc[filt2, ['name', 'surname', 'start', 'position']])
+                        print(df.loc[filt, ['date', 'description']])
+                    else:
+                        print("No such person")
+                elif choice == 2:
+                    name = input("Name: ")
+                    surname = input("Surname: ")
+                    start = input("Date: ")
+                    position = input("Position: ")
+                    date = input("Date: ")
+                    description = input("Description: ")
+                    id = len(df) + 1
+                    df.loc[id, ['id', 'start', 'name', 'surname', 'position', 'date', 'description']] = [id, start, name, surname, position, date, description]
+                elif choice == 3:
+                    person = input("Surname: ")
+                    filt = (df['surname'] == person)
+                    df.drop(index=df[filt].index, inplace=True)
+                elif choice == 4:
+                    filt = (df['surname'].drop_duplicates().index)
+                    print(df.loc[filt, ['name', 'surname', 'start', 'position']])
+                    print()
                 else:
-                    print("No such person")
-            elif choice == 2:
-                name = input("Name: ")
-                surname = input("Surname: ")
-                start = input("Date: ")
-                position = input("Position: ")
-                date = input("Date: ")
-                description = input("Description: ")
-                id = len(df) + 1
-                df.loc[id, ['id', 'start', 'name', 'surname', 'position', 'date', 'description']] = [id, start, name, surname, position, date, description]
-            elif choice == 3:
-                person = input("Surname: ")
-                filt = (df['surname'] == person)
-                df.drop(index=df[filt].index, inplace=True)
-            elif choice == 4:
-                filt = (df['surname'].drop_duplicates().index)
-                print(df.loc[filt, ['name', 'surname', 'start', 'position']])
-                print()
+                    df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
+                    df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv')
+                    loop_db = False
+                    break
+        elif choice == 2:
+            print()
+            run_budget()
+            print()
+        elif choice == 3:
+            choice = input("month [m] or year [y]: ")
+            print()
+            if choice == 'm':
+                print(calendar.month(datetime.date.today().year, datetime.date.today().month))
             else:
-                df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
-                df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv')
-                loop_db = False
-                break
-    elif choice == 2:
-        print()
-        run_budget()
-        print()
-    elif choice == 3:
-        choice = input("month [m] or year [y]: ")
-        print()
-        if choice == 'm':
-            print(calendar.month(datetime.date.today().year, datetime.date.today().month))
+                print(calendar.calendar(datetime.date.today().year))
+        elif choice == 4:
+            print()
+            currency_converter()
+            print()
         else:
-            print(calendar.calendar(datetime.date.today().year))
-    elif choice == 4:
-        print()
-        currency_converter()
-        print()
-    else:
-        loop_menu = False
+            loop_menu = False
+
+if __name__ == "__main__":
+
+    p1 = threading.Thread(target=show_time)
+    p2 = threading.Thread(target=terminal)
+
+    p1.start()
+    p2.start()

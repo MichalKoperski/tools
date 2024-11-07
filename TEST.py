@@ -1,33 +1,17 @@
-import requests
+import time
+import continuous_threading
 
-api_key = 0
+c = 0
 
-with open("/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/open_currency.txt") as conf:
-  for line in conf:
-    api_key = line
+def count():
+    global c
+    c += 1
+    time.sleep(1)
 
-url = f"https://openexchangerates.org/api/latest.json?app_id={api_key}"
+th = continuous_threading.ContinuousThread(target=count)
+th.start()
 
-response = requests.get(url)
-data = response.json()
+time.sleep(5)
+print('Count:', c)
 
-exchange_rates = data["rates"]
-
-available_currencies = ""
-for currency in exchange_rates.keys():
-  available_currencies += currency + ", "
-
-# Remove the trailing comma and space
-available_currencies = available_currencies[:-2]
-
-print("Available currencies: " + available_currencies)
-
-from_currency = input("Enter the base currency: ").upper()
-to_currency = input("Enter the target currency: ").upper()
-
-amount = float(input("Enter the amount to convert: "))
-
-original_amount = amount / exchange_rates[from_currency]
-converted_amount = original_amount * exchange_rates[to_currency]
-
-print(f"{amount} {from_currency} = {converted_amount} {to_currency}")
+# Process will automatically exit with threading._shutdown() override
