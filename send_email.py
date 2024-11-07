@@ -1,26 +1,23 @@
-import smtplib
+import smtplib, ssl
 
-sender = "86misiaczek86@gmail.com"
-receiver = "86misiaczek86@gmail.com"
-password = "pass"
-subject = "Python email"
-body = "My email"
+smtp_server = "smtp.gmail.com"
+port = 587  # For starttls
+sender_email = "86misiaczek86@gmail.com"
+password = input("Type your password and press enter: ")
 
-#header
-message = f"""From: Mike{sender}
-To: Mike{receiver}
-Subject: {subject}\n
-{body}
-"""
+# Create a secure SSL context
+context = ssl.create_default_context()
 
-server = smtplib.SMTP("smtp.gmail.com",587)
-server.starttls()
-
+# Try to log in to server and send email
 try:
-    server.login(sender,password)
-    print("Logged in")
-    server.sendmail(sender,receiver,message)
-    print("Email has been sent")
+    server = smtplib.SMTP(smtp_server,port)
+    server.ehlo() # Can be omitted
+    server.starttls(context=context) # Secure the connection
+    server.ehlo() # Can be omitted
+    server.login(sender_email, password)
 
-except smtplib.SMTPAuthenticationError:
-    print("unable to login")
+except Exception as e:
+    # Print any error messages to stdout
+    print(e)
+finally:
+    server.quit()

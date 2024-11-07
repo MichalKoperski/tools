@@ -1,17 +1,21 @@
-import time
-import continuous_threading
+from scapy.all import ARP, Ether, srp
 
-c = 0
 
-def count():
-    global c
-    c += 1
-    time.sleep(1)
+def scan(ip):
+    arp_request = ARP(pdst=ip)
+    ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+    packet = ether / arp_request
+    result = srp(packet, timeout=3, verbose=0)[0]
 
-th = continuous_threading.ContinuousThread(target=count)
-th.start()
+    devices = []
+    for sent, received in result:
+        devices.append({'ip': received.psrc, 'mac': received.hwsrc})
 
-time.sleep(5)
-print('Count:', c)
+    return devices
 
-# Process will automatically exit with threading._shutdown() override
+
+ip_range = "192.168.50.0/24"
+devices = scan(ip_range)
+
+for device in devices:
+    print(f"IP: {device['ip']}, MAC: {device['mac']}")
