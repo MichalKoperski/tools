@@ -3,22 +3,17 @@ import pandas as pd
 import plotext as plt
 import calendar
 import requests
-import time
-from multiprocessing import Process
-import threading
-import concurrent.futures
 
 
 #====================================================CLOCK==============================================
 
 
 def show_time():
-    while True:
-        now = datetime.datetime.now()
-        current_time = now.strftime("%-H:%M")
-        current_second = now.strftime("%S")
-        print(f"\033cClock: {current_time}:{current_second}")
-        time.sleep(1)
+    now = datetime.datetime.now()
+    current_time = now.strftime("%-H:%M")
+    date = datetime.datetime.today().strftime("%Y-%m-%d")
+    print()
+    print(f"Clock: {current_time}   {date}")
 
 
 #====================================================CURRENCY==============================================
@@ -132,6 +127,7 @@ def run_budget():
 
 
 def menu_display():
+    show_time()
     print()
     print("=" * 76)
     print("|| 1.run database  2.run budget  3.calendar  4.currency converter  5.exit ||")
@@ -142,6 +138,7 @@ def menu_display():
 
 
 def menu_display_db():
+    show_time()
     print()
     print("==================PERSON================\n"
           "||  1.select    2.insert    3.delete  ||\n"
@@ -210,10 +207,5 @@ def terminal():
         else:
             loop_menu = False
 
-if __name__ == "__main__":
 
-    p1 = threading.Thread(target=show_time)
-    p2 = threading.Thread(target=terminal)
-
-    p1.start()
-    p2.start()
+terminal()
