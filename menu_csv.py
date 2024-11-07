@@ -152,11 +152,10 @@ def menu_display_db():
 def terminal():
     loop_menu = True
     while loop_menu:
-        loop_db = True
         choice = menu_display()
         if choice == 1:
             df = pd.read_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv', index_col='id')
-            while loop_db:
+            while True:
                 choice = menu_display_db()
                 if choice == 1:
                     person = input("Person: ")
@@ -187,7 +186,6 @@ def terminal():
                 else:
                     df.drop(df.iloc[:, 6:].columns, axis=1, inplace=True)
                     df.to_csv('/Users/michalkoperski/Library/Mobile Documents/com~apple~CloudDocs/!!data/db.csv')
-                    loop_db = False
                     break
         elif choice == 2:
             print()
